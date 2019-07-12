@@ -1,0 +1,23 @@
+{
+  "3i2n_3A": 0.22,  # Test #6 Thin.xls
+  "3i2n_4A": ,  # Test #5 best hidedust, autothresholding.xls
+  "3i2n_5A": ,  # Test #5 best hidedust, autothresholding.xls
+  "3n2t_3A": 0.3,  # Test #7 Regular.xls
+  "3n2t_4A": ,  # Test #5 best hidedust, autothresholding.xls
+  "3n2t_5A": ,  # Test #5 best hidedust, autothresholding.xls
+  "3qc7_3A": ,  # Test #5 best hidedust, autothresholding.xls
+  "3qc7_4A": 0.3,  # Test #7 Regular.xls
+  "3qc7_5A": ,  # Test #5 best hidedust, autothresholding.xls
+  "5i68_3A": 0.4,  # Test #6 Thin.xls
+  "5i68_4A": 0.3,  # Test #7 Regular.xls
+  "5i68_5A": ,  # Test #5 best hidedust, autothresholding.xls
+  "6ahv_3A": 0.4,  # Test #6 Thin.xls
+  "6ahv_4A": ,  # Test #5 best hidedust, autothresholding.xls
+  "6ahv_5A": ,  # Test #5 best hidedust, autothresholding.xls
+  "6eyw_3A": 0.3,  # Test #7 Regular.xls
+  "6eyw_4A": ,  # Test #5 best hidedust, autothresholding.xls
+  "6eyw_5A": 0.3,  # Test #7 Regular.xls
+  "6g61_3A": 0.3,  # Test #7 Regular.xls
+  "6g61_4A": ,  # Test #5 best hidedust, autothresholding.xls
+  "6g61_5A": 0.4   # Test #6 Thin.xls
+}

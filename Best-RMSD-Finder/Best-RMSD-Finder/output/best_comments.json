@@ -1,23 +1,52 @@
 {
-  "3i2n_3A": 0.22,  # Test #6 Thin.xls
-  "3i2n_4A": ,  # Test #5 best hidedust, autothresholding.xls
-  "3i2n_5A": ,  # Test #5 best hidedust, autothresholding.xls
-  "3n2t_3A": 0.3,  # Test #7 Regular.xls
-  "3n2t_4A": ,  # Test #5 best hidedust, autothresholding.xls
-  "3n2t_5A": ,  # Test #5 best hidedust, autothresholding.xls
-  "3qc7_3A": ,  # Test #5 best hidedust, autothresholding.xls
-  "3qc7_4A": 0.3,  # Test #7 Regular.xls
-  "3qc7_5A": ,  # Test #5 best hidedust, autothresholding.xls
-  "5i68_3A": 0.4,  # Test #6 Thin.xls
-  "5i68_4A": 0.3,  # Test #7 Regular.xls
-  "5i68_5A": ,  # Test #5 best hidedust, autothresholding.xls
-  "6ahv_3A": 0.4,  # Test #6 Thin.xls
-  "6ahv_4A": ,  # Test #5 best hidedust, autothresholding.xls
-  "6ahv_5A": ,  # Test #5 best hidedust, autothresholding.xls
-  "6eyw_3A": 0.3,  # Test #7 Regular.xls
-  "6eyw_4A": ,  # Test #5 best hidedust, autothresholding.xls
-  "6eyw_5A": 0.3,  # Test #7 Regular.xls
-  "6g61_3A": 0.3,  # Test #7 Regular.xls
-  "6g61_4A": ,  # Test #5 best hidedust, autothresholding.xls
-  "6g61_5A": 0.4   # Test #6 Thin.xls
+  "2513": ['', ''],  # Test #2 results @ DAIS 5.xls
+  "3061": [0.0385, 83.3],  # Test #5 Thick.xls
+  "3121": ['', ''],  # Test #2 results @ DAIS 5.xls
+  "3222": ['', ''],  # Test #2 results @ DAIS 5.xls
+  "3238": ['', ''],  # Test #2 results @ DAIS 5.xls
+  "3601": [0.0626, 1.87],  # Test #3 Thin.xls
+  "3785": ['', ''],  # Test #2 results @ DAIS 5.xls
+  "4054": ['', ''],  # Test #2 results @ DAIS 5.xls
+  "4128": ['', ''],  # Test #2 results @ DAIS 5.xls
+  "5623": ['', ''],  # Test #2 results @ DAIS 5.xls
+  "5778": ['', ''],  # Test #2 results @ DAIS 5.xls
+  "5995": ['', ''],  # Test #2 results @ DAIS 5.xls
+  "6224": [0.0366, 3.43],  # Test #4 Regular.xls
+  "6239": ['', ''],  # Test #2 results @ DAIS 5.xls
+  "6240": ['', ''],  # Test #2 results @ DAIS 5.xls
+  "6272": ['', ''],  # Test #2 results @ DAIS 5.xls
+  "6324": ['', ''],  # Test #2 results @ DAIS 5.xls
+  "6346": ['', ''],  # Test #2 results @ DAIS 5.xls
+  "6408": [0.39, 50.0],  # Test #5 Thick.xls
+  "6488": [0.0163, 20.8],  # Test #5 Thick.xls
+  "6551": ['', ''],  # Test #2 results @ DAIS 5.xls
+  "6630": [0.0079, 17.6],  # Test #5 Thick.xls
+  "6631": ['', ''],  # Test #2 results @ DAIS 5.xls
+  "6676": ['', ''],  # Test #2 results @ DAIS 5.xls
+  "6703": ['', ''],  # Test #2 results @ DAIS 5.xls
+  "6744": ['', ''],  # Test #2 results @ DAIS 5.xls
+  "6770": ['', ''],  # Test #2 results @ DAIS 5.xls
+  "7063": ['', ''],  # Test #2 results @ DAIS 5.xls
+  "8015": ['', ''],  # Test #2 results @ DAIS 5.xls
+  "8069": ['', ''],  # Test #2 results @ DAIS 5.xls
+  "8200": ['', ''],  # Test #2 results @ DAIS 5.xls
+  "8331": ['', ''],  # Test #2 results @ DAIS 5.xls
+  "8405": ['', ''],  # Test #2 results @ DAIS 5.xls
+  "8410": ['', ''],  # Test #2 results @ DAIS 5.xls
+  "8515": ['', ''],  # Test #2 results @ DAIS 5.xls
+  "8637": [0.0275, 8.54],  # Test #5 Thick.xls
+  "8642": [0.0286, 8.54],  # Test #4 Regular.xls
+  "8651": ['', ''],  # Test #2 results @ DAIS 5.xls
+  "8658": ['', ''],  # Test #2 results @ DAIS 5.xls
+  "8697": ['', ''],  # Test #2 results @ DAIS 5.xls
+  "8712": ['', ''],  # Test #2 results @ DAIS 5.xls
+  "8764": ['', ''],  # Test #2 results @ DAIS 5.xls
+  "8767": ['', ''],  # Test #2 results @ DAIS 5.xls
+  "8782": ['', ''],  # Test #2 results @ DAIS 5.xls
+  "8784": ['', ''],  # Test #2 results @ DAIS 5.xls
+  "8794": ['', ''],  # Test #2 results @ DAIS 5.xls
+  "8882": ['', ''],  # Test #2 results @ DAIS 5.xls
+  "9515": ['', ''],  # Test #2 results @ DAIS 5.xls
+  "4062": [0.0465, 28.7],  # Test #5 Thick.xls
+  "8072": [0.0274, 116]   # Test #5 Thick.xls
 }

@@ -11,6 +11,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Find best RMSD')
     parser.add_argument('input', type=str, help='Folder of .xls result files from Ca protein prediction project output and json hyperparameter files that produced those results')
     parser.add_argument('output', type=str, help='Folder where json files are produced with hyperparameters with best RMSD')
+    parser.add_argument('-o',  '--option', metavar='option', type=int, default=1, help='Option 1 is best RMSD focus, option 2 is best matching Ca percentage focus')
 
     args = parser.parse_args()
 
@@ -20,11 +21,11 @@ if __name__ == '__main__':
     args.input = os.getcwd().replace(os.sep, '/') + '/' + args.input
     args.output = os.getcwd().replace(os.sep, '/') + '/' + args.output
 
-    this.run(args.input, args.output)
+    this.run(args.input, args.output, args.option)
 
 
 
-def run(input_path, output_path):
+def run(input_path, output_path, option):
 
     params_list = [(xls_file, input_path + xls_file, output_path) 
                    for xls_file in filter(lambda d: os.path.isfile(input_path + d) 
@@ -36,12 +37,12 @@ def run(input_path, output_path):
                                           and (input_path + d).split('.')[-1] in ['json'], 
                                           os.listdir(input_path)) if json_file.split('.')[0] == param[0].split('.')[0]]
 
-    best_rmsd = this.calc_best_rmsd(params_list)
+    best_rmsd = this.calc_best_rmsd(params_list, option)
     this.make_json_file(params_list, best_rmsd)
 
 
 
-def calc_best_rmsd(params_list):
+def calc_best_rmsd(params_list, option):
     best_rmsd = dict()
     for i in range(len(params_list)):
         book = xlrd.open_workbook(params_list[i][1])
@@ -57,8 +58,14 @@ def calc_best_rmsd(params_list):
             if emdb_id not in best_rmsd:
                 best_rmsd[emdb_id] = (rmsd, matching_percentage, params_list[i][1].split('/')[-1])
             else:
-                if rmsd < best_rmsd[emdb_id][0] and matching_percentage > (best_rmsd[emdb_id][1] - 0.20):
-                    best_rmsd[emdb_id] = (rmsd, matching_percentage, params_list[i][1].split('/')[-1])
+                if option == 1:
+                    if rmsd < best_rmsd[emdb_id][0] and matching_percentage > (best_rmsd[emdb_id][1] - 0.20):
+                        best_rmsd[emdb_id] = (rmsd, matching_percentage, params_list[i][1].split('/')[-1])
+                elif option == 2:
+                    if (rmsd - 1.0) < best_rmsd[emdb_id][0] and matching_percentage > (best_rmsd[emdb_id][1]):
+                        best_rmsd[emdb_id] = (rmsd, matching_percentage, params_list[i][1].split('/')[-1])
+                else:
+                    print('Invalid option selected. Must be 1 or 2.')
     return best_rmsd
 
 

@@ -1,77 +1,207 @@
+import math
 import xlwt
-import json
+from datetime import timedelta
 
-def build_excel(output_path, params_list, selections_file):
-    book = xlwt.Workbook()
-    sh = book.add_sheet('results')
 
-    sh.write(0, 0, 'EMDB ID')
-    sh.write(0, 1, 'Start residue')
-    sh.write(0, 2, 'End residue')
-    sh.write(0, 3, 'RMSD')
-    sh.write(0, 4, 'TMScore')
-    sh.write(0, 5, 'Matching Ca %')
+class Evaluator:
 
-    # 15 characters wide
-    sh.col(1).width = 256*15
-    sh.col(2).width = 256*15
-    # 25 characters wide
-    sh.col(3).width = 256*25
-    sh.col(4).width = 256*25
+    def __init__(self, input_path):
+        self.evaluation_results = []
+        self.input_path = input_path
 
-    if selections_file is not None:
-        with open(selections_file) as f:
-            selections = json.load(f)
+    def evaluate(self, emdb_id, predicted_file, gt_file, execution_time):
+        """This method finds the closest pred_ca/gt_ca pair in the entire
+        structure. Then removes them from the set and continues to find the next
+        closest pair until all pairs with a distance of less than 3A have been
+        removed."""
+        gt_pdb = open(gt_file, 'r')
+        gt_ca_atoms = list()
+        for line in gt_pdb:
+            if line.startswith("ATOM") and line[13:16] == "CA ":
+                x = float(line[31:38])
+                y = float(line[39:46])
+                z = float(line[47:54])
+                gt_ca_atoms.append(tuple([x, y, z]))
+        gt_pdb.close()
+        native_ca_atoms = len(gt_ca_atoms)
+        prediction_file = open(predicted_file, 'r')
+        modeled_ca = 0
+        pred_ca_atoms = list()
+        previous_index = -2
+        for line in prediction_file:
+            if line.startswith("ATOM") and line[13:16] == "CA ":
+                modeled_ca += 1
+                index = int(line[23:26])
+                x = float(line[31:38])
+                y = float(line[39:46])
+                z = float(line[47:54])
+                if index != previous_index + 1:
+                    pred_ca_atoms.append(list())
+                pred_ca_atoms[len(pred_ca_atoms) - 1].append(tuple([x, y, z]))
+                previous_index = index
+        prediction_file.close()
 
-    sum_rmsd = 0
-    sum_tmscore = 0
-    sum_matching_ca = 0
-    count_rmsd = len(params_list)
-    count_tmscore = len(params_list)
-    for i in range(len(params_list)):
-        emdb_id = params_list[i][0]
-        sh.write(1 + i, 0, emdb_id )
-        score_file_path = output_path + emdb_id + '/score/score.txt'
-        score_file = open(score_file_path, 'r')
+        # Find the number incorrect
+        incorrect = 0
+        for partial_set in pred_ca_atoms:
+            for pred_ca in partial_set:
+                min_dist = 1000000
+                for gt_ca in gt_ca_atoms:
+                    dist = distance(pred_ca[2], gt_ca[2], pred_ca[1], gt_ca[1], pred_ca[0], gt_ca[0])
+                    if dist < min_dist:
+                        min_dist = dist
+                if min_dist > 3:
+                    incorrect += 1
 
-        if selections_file is not None and emdb_id in selections:
-            start, end = selections[emdb_id]
-        else:
-            start = 'All'
-            end = 'All'
+        # Calculate false-positive rate
+        num_fp = 0
+        for partial_set in pred_ca_atoms:
+            for pred_ca in partial_set:
+                is_fp = True
+                for gt_ca in gt_ca_atoms:
+                    if distance(pred_ca[2], gt_ca[2], pred_ca[1], gt_ca[1], pred_ca[0], gt_ca[0]) <= 3:
+                        is_fp = False
+                        break
 
-        sh.write(1 + i, 1, start)
-        sh.write(1 + i, 2, end)
+                if is_fp:
+                    num_fp += 1
 
-        rmsd = score_file.readline().split()[-1]
-        sh.write(1 + i, 3, float(rmsd))
+        fp_per = num_fp / len(pred_ca_atoms)
 
-        if params_list[0][4] is None:
-            tmscore = score_file.readline().split()[-1]
-            sh.write(1 + i, 4, tmscore)
-        else:
-            matching_ca = score_file.readline().split()[-1]
-            sh.write(1 + i, 5, float(matching_ca))
-            sum_matching_ca += float(matching_ca)
-        
-        try:
-            sum_rmsd += float(rmsd)
-        except:
-            count_rmsd = count_rmsd - 1
+        total_ca = 0
+        squared_sum = 0
+        for partial_set in pred_ca_atoms:
+            # Do the first direction now
+            removed_gt_atoms_one = list()
+            one_squared_sum = 0
+            one_total_ca = 0
+            for pred_ca in partial_set:
+                min_dist = 1000000
+                closest_gt_ca = None
+                for gt_ca in gt_ca_atoms:
+                    dist = distance(pred_ca[2], gt_ca[2], pred_ca[1], gt_ca[1], pred_ca[0], gt_ca[0])
+                    if dist < min_dist:
+                        min_dist = dist
+                        closest_gt_ca = gt_ca
+                if min_dist < 3:
+                    gt_ca_atoms.remove(closest_gt_ca)
+                    removed_gt_atoms_one.append(closest_gt_ca)
+                    one_total_ca += 1
+                    one_squared_sum += min_dist ** 2
+            # Restore the gt_list
+            for removed_ca in removed_gt_atoms_one:
+                gt_ca_atoms.append(removed_ca)
+            # Now do the other direction
+            partial_set.reverse()
+            removed_gt_atoms_two = list()
+            two_squared_sum = 0
+            two_total_ca = 0
+            for pred_ca in partial_set:
+                min_dist = 1000000
+                closest_gt_ca = None
+                for gt_ca in gt_ca_atoms:
+                    dist = distance(pred_ca[2], gt_ca[2], pred_ca[1], gt_ca[1], pred_ca[0], gt_ca[0])
+                    if dist < min_dist:
+                        min_dist = dist
+                        closest_gt_ca = gt_ca
+                if min_dist < 3:
+                    gt_ca_atoms.remove(closest_gt_ca)
+                    removed_gt_atoms_two.append(closest_gt_ca)
+                    two_total_ca += 1
+                    two_squared_sum += min_dist ** 2
+            # Restore the gt_list
+            for removed_ca in removed_gt_atoms_two:
+                gt_ca_atoms.append(removed_ca)
+            # Now use the better fit
+            one_fit = 0 if one_total_ca == 0 else math.sqrt(one_squared_sum / one_total_ca)
+            two_fit = 0 if two_total_ca == 0 else math.sqrt(two_squared_sum / two_total_ca)
+            if two_total_ca > one_total_ca or (two_total_ca == one_total_ca and two_fit < one_fit):
+                for ca in removed_gt_atoms_two:
+                    gt_ca_atoms.remove(ca)
+                total_ca += two_total_ca
+                squared_sum += two_squared_sum
+            else:
+                for ca in removed_gt_atoms_one:
+                    gt_ca_atoms.remove(ca)
+                total_ca += one_total_ca
+                squared_sum += one_squared_sum
 
-        if params_list[0][4] is None:
-            try:
-                sum_tmscore += float(tmscore)
-            except:
-                count_tmscore = count_tmscore - 1
+        self.evaluation_results.append(EvaluationResult(emdb_id,
+                                                        modeled_ca,
+                                                        native_ca_atoms,
+                                                        total_ca,
+                                                        total_ca / native_ca_atoms,
+                                                        math.sqrt(squared_sum / total_ca) if total_ca != 0 else 0,
+                                                        incorrect,
+                                                        execution_time,
+                                                        fp_per))
 
-        score_file.close()
+    def create_report(self, output_path, execution_time):
+        """Creates excel document containing evaluation reports"""
+        # Don't create report if there are no evaluation results
+        if not self.evaluation_results:
+            return
 
-    sh.write(len(params_list) + 1, 0, 'Avg.')
-    avg_rmsd = sum_rmsd / count_rmsd
-    avg_tmscore = sum_tmscore / count_tmscore
-    sh.write(len(params_list) + 1, 3, avg_rmsd)
-    sh.write(len(params_list) + 1, 4, avg_tmscore)
-    sh.write(len(params_list) + 1, 5, float(sum_matching_ca / count_rmsd))
+        self.evaluation_results.sort(key=lambda r: r.name)
 
-    book.save(output_path + 'results.xls')
+        book = xlwt.Workbook()
+        sh = book.add_sheet('results')
+
+        sh.write(0, 0, 'EMDB ID')
+        sh.write(0, 1, '# Modeled Ca Atoms')
+        sh.write(0, 2, '# Native Ca Atoms')
+        sh.write(0, 3, '# Matching Ca Atoms')
+        sh.write(0, 4, 'Matching Percentage')
+        sh.write(0, 5, 'RMSD')
+        sh.write(0, 6, 'Incorrect')
+        sh.write(0, 7, 'FP')
+        sh.write(0, 8, 'Execution Time')
+
+        for i in range(len(self.evaluation_results)):
+            sh.write(1 + i, 0, self.evaluation_results[i].name)
+            sh.write(1 + i, 1, self.evaluation_results[i].num_modeled_ca)
+            sh.write(1 + i, 2, self.evaluation_results[i].num_native_ca)
+            sh.write(1 + i, 3, self.evaluation_results[i].num_matching_ca)
+            sh.write(1 + i, 4, self.evaluation_results[i].matching_ca_per)
+            sh.write(1 + i, 5, self.evaluation_results[i].rmsd)
+            sh.write(1 + i, 6, self.evaluation_results[i].num_incorrect)
+            sh.write(1 + i, 7, self.evaluation_results[i].fp_per)
+            sh.write(1 + i, 8, str(timedelta(seconds=int(self.evaluation_results[i].execution_time))))
+
+        rmsd_avg = sum(r.rmsd for r in self.evaluation_results) / len(self.evaluation_results)
+        matching_ca_per_avg = sum(r.matching_ca_per for r in self.evaluation_results) / len(self.evaluation_results)
+        execution_time_avg = sum(r.execution_time for r in self.evaluation_results) / len(self.evaluation_results)
+        fp_avg = sum(r.fp_per for r in self.evaluation_results) / len(self.evaluation_results)
+        sh.write(len(self.evaluation_results) + 1, 0, 'Avg.')
+        sh.write(len(self.evaluation_results) + 1, 4, matching_ca_per_avg)
+        sh.write(len(self.evaluation_results) + 1, 5, rmsd_avg)
+        sh.write(len(self.evaluation_results) + 1, 7, fp_avg)
+        sh.write(len(self.evaluation_results) + 1, 8, str(timedelta(seconds=int(execution_time_avg))))
+        sh.write(len(self.evaluation_results) + 2, 0, 'Total')
+        sh.write(len(self.evaluation_results) + 2, 8, str(timedelta(seconds=int(execution_time))))
+
+        book.save(output_path + 'results.xls')
+
+
+class EvaluationResult:
+
+    def __init__(self, name, num_modeled_ca, num_native_ca, num_matching_ca, matching_ca_per, rmsd, num_incorrect,
+                 execution_time, fp_per):
+        self.name = name
+        self.num_modeled_ca = num_modeled_ca
+        self.num_native_ca = num_native_ca
+        self.num_matching_ca = num_matching_ca
+        self.matching_ca_per = matching_ca_per
+        self.rmsd = rmsd
+        self.num_incorrect = num_incorrect
+        self.execution_time = execution_time
+        self.fp_per = fp_per
+
+
+def distance(z1, z2, y1, y2, x1, x2):
+    """Calculates Euclidean distance between two points"""
+    z_diff = z1 - z2
+    y_diff = y1 - y2
+    x_diff = x1 - x2
+    sum_squares = math.pow(z_diff, 2) + math.pow(y_diff, 2) + math.pow(x_diff, 2)
+    return math.sqrt(sum_squares)

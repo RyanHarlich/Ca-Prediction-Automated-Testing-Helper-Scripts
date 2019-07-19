@@ -4,7 +4,8 @@ import os
 import sys
 from multiprocessing import cpu_count, Pool
 import traceback
-from .evaluate import build_excel
+#from .evaluate import build_excel
+from .evaluate import Evaluator
 
 __author__ = 'Michael Ryan Harlich'
 
@@ -21,10 +22,19 @@ def run(input_path, output_path, selections_file, phenix_path, tmalign_path):
     #os.system("rm " + output_path + "* -r")
 
     pool = Pool(min(cpu_count(), len(params_list)))
-    pool.map(run_steps, params_list)
+    results = pool.map(run_steps, params_list)
 
-    params_list.sort(key=lambda tup: tup[0])
-    build_excel(output_path, params_list, selections_file)
+    #params_list.sort(key=lambda tup: tup[0])
+    #build_excel(output_path, params_list, selections_file)
+    results = filter(lambda r: r is not None, results)
+    inputpath_blank = ""
+    evaluator = Evaluator(inputpath_blank)
+    for emdb_id, predicted_file, gt_file, execution_time in results:
+        evaluator.evaluate(emdb_id, predicted_file, gt_file, execution_time)
+
+    evaluator.create_report(output_path, 0)
+
+
 
 
 def run_steps(params):
@@ -40,6 +50,9 @@ def run_steps(params):
         except:
             exc_info = sys.exc_info()
             traceback.print_exception(*exc_info)
+
+    # NOTE: This should eventually be aligned_prediction (whole)
+    return emdb_id, paths['prediction'], paths['partial_ground_truth'], 0
 
 
 def make_paths(input_path, emdb_id, selections_file, phenix_path, tmalign_path):

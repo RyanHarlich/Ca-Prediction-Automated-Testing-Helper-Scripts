@@ -10,6 +10,7 @@ def build_excel(output_path, params_list, selections_file):
     sh.write(0, 2, 'End residue')
     sh.write(0, 3, 'RMSD')
     sh.write(0, 4, 'TMScore')
+    sh.write(0, 5, 'Matching Ca %')
 
     # 15 characters wide
     sh.col(1).width = 256*15
@@ -24,6 +25,7 @@ def build_excel(output_path, params_list, selections_file):
 
     sum_rmsd = 0
     sum_tmscore = 0
+    sum_matching_ca = 0
     count_rmsd = len(params_list)
     count_tmscore = len(params_list)
     for i in range(len(params_list)):
@@ -42,18 +44,26 @@ def build_excel(output_path, params_list, selections_file):
         sh.write(1 + i, 2, end)
 
         rmsd = score_file.readline().split()[-1]
-        sh.write(1 + i, 3, rmsd)
-        tmscore = score_file.readline().split()[-1]
-        sh.write(1 + i, 4, tmscore)
+        sh.write(1 + i, 3, float(rmsd))
+
+        if params_list[0][4] is None:
+            tmscore = score_file.readline().split()[-1]
+            sh.write(1 + i, 4, tmscore)
+        else:
+            matching_ca = score_file.readline().split()[-1]
+            sh.write(1 + i, 5, float(matching_ca))
+            sum_matching_ca += float(matching_ca)
         
         try:
             sum_rmsd += float(rmsd)
         except:
             count_rmsd = count_rmsd - 1
-        try:
-            sum_tmscore += float(tmscore)
-        except:
-            count_tmscore = count_tmscore - 1
+
+        if params_list[0][4] is None:
+            try:
+                sum_tmscore += float(tmscore)
+            except:
+                count_tmscore = count_tmscore - 1
 
         score_file.close()
 
@@ -62,5 +72,6 @@ def build_excel(output_path, params_list, selections_file):
     avg_tmscore = sum_tmscore / count_tmscore
     sh.write(len(params_list) + 1, 3, avg_rmsd)
     sh.write(len(params_list) + 1, 4, avg_tmscore)
+    sh.write(len(params_list) + 1, 5, float(sum_matching_ca / count_rmsd))
 
     book.save(output_path + 'results.xls')

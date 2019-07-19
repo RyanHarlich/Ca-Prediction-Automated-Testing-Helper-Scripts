@@ -1,5 +1,5 @@
 import partial_protein.partial_protein as partial
-import score.score as score
+import score.score_phenix as score
 import os
 import sys
 from multiprocessing import cpu_count, Pool
@@ -13,21 +13,23 @@ PIPELINE = [
     score
 ]
 
-def run(input_path, output_path, selections_file):
-    params_list = [(emdb_id, input_path, output_path, selections_file) 
+def run(input_path, output_path, selections_file, phenix_path, tmalign_path):
+    params_list = [(emdb_id, input_path, output_path, selections_file, phenix_path, tmalign_path) 
                    for emdb_id in filter(lambda d: os.path.isdir(input_path + d), os.listdir(input_path))]
 
-    os.system("rm " + output_path + "* -r")
+    # Use with caution
+    #os.system("rm " + output_path + "* -r")
 
     pool = Pool(min(cpu_count(), len(params_list)))
     pool.map(run_steps, params_list)
 
+    params_list.sort(key=lambda tup: tup[0])
     build_excel(output_path, params_list, selections_file)
 
 
 def run_steps(params):
-    emdb_id, input_path, output_path, selections_file = params
-    paths = make_paths(input_path, emdb_id, selections_file)
+    emdb_id, input_path, output_path, selections_file, phenix_path, tmalign_path = params
+    paths = make_paths(input_path, emdb_id, selections_file, phenix_path, tmalign_path)
 
     for step in PIPELINE:
         paths['output'] = output_path + emdb_id + '/' + step.__name__.split('.')[0] + '/'
@@ -40,7 +42,7 @@ def run_steps(params):
             traceback.print_exception(*exc_info)
 
 
-def make_paths(input_path, emdb_id, selections_file):
+def make_paths(input_path, emdb_id, selections_file, phenix_path, tmalign_path):
     prediction_file = get_file(input_path + emdb_id, ['pdb', 'ent'])
     gt_file = get_file(input_path + emdb_id, ['pdb', 'ent'], ['native'])
     paths = {
@@ -50,6 +52,10 @@ def make_paths(input_path, emdb_id, selections_file):
 
     if selections_file is not None:
         paths['selections_file'] = selections_file
+    if phenix_path is not None:
+        paths['phenix_chain_comparison_path'] = phenix_path
+    if tmalign_path is not None:
+        paths['tmalign_path'] = tmalign_path
 
     return paths
 

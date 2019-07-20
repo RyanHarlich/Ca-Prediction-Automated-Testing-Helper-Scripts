@@ -52,7 +52,12 @@ def run_steps(params):
             traceback.print_exception(*exc_info)
 
     # NOTE: This should eventually be aligned_prediction (whole)
-    return emdb_id, paths['prediction'], paths['partial_ground_truth'], 0
+    with open(paths['aligned_prediction']) as f:
+        firstChar = f.read(1)
+        if not firstChar:
+            return None
+
+    return emdb_id, paths['aligned_prediction'], paths['partial_ground_truth'], 0
 
 
 def make_paths(input_path, emdb_id, selections_file, phenix_path, tmalign_path):

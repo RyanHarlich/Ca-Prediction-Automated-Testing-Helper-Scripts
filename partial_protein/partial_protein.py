@@ -12,7 +12,7 @@ def update_paths(paths):
     paths['aligned_prediction'] = paths['output'] + 'aligned_prediction.pdb'
 
 def execute(paths):
-    #align(paths)
+    align(paths)
     start_residue, end_residue = get_start_and_end_residue(paths)
     save_partial_protein(start_residue, end_residue, paths)
     pass
@@ -72,7 +72,7 @@ def align(paths):
         f = os.popen(paths['tmalign_path'] + ' ' + paths['prediction'] + ' ' + paths['ground_truth'] + ' -o ' + paths['output'] + 'TM.sup')
         time.sleep(1)
         ap_file = open(paths['aligned_prediction'], 'w')
-        tm_sup = open(paths['output'] + 'TM.sup_all_atm', 'r')
+        tm_sup = open(paths['output'] + 'TM.sup_all', 'r')
         on = False
         for line in tm_sup:
             tokens = line.split()

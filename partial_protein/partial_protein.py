@@ -69,7 +69,7 @@ def get_start_and_end_residue(paths):
 
 def align(paths):
     try:
-        f = os.popen(paths['tmalign_path'] + ' ' + paths['prediction'] + ' ' + paths['ground_truth'] + ' -o ' + paths['output'] + 'TM.sup')
+        os.system(paths['tmalign_path'] + ' ' + paths['prediction'] + ' ' + paths['ground_truth'] + ' -o ' + paths['output'] + 'TM.sup')
         time.sleep(1)
         ap_file = open(paths['aligned_prediction'], 'w')
         tm_sup = open(paths['output'] + 'TM.sup_all', 'r')

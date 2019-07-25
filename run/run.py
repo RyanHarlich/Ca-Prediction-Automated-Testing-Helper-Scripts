@@ -14,18 +14,13 @@ PIPELINE = [
     score
 ]
 
-def run(input_path, output_path, selections_file, phenix_path, tmalign_path):
-    params_list = [(emdb_id, input_path, output_path, selections_file, phenix_path, tmalign_path) 
+def run(input_path, output_path, selections_file, tmalign_path):
+    params_list = [(emdb_id, input_path, output_path, selections_file, tmalign_path) 
                    for emdb_id in filter(lambda d: os.path.isdir(input_path + d), os.listdir(input_path))]
-
-    # Use with caution
-    #os.system("rm " + output_path + "* -r")
 
     pool = Pool(min(cpu_count(), len(params_list)))
     results = pool.map(run_steps, params_list)
 
-    #params_list.sort(key=lambda tup: tup[0])
-    #build_excel(output_path, params_list, selections_file)
     results = filter(lambda r: r is not None, results)
     inputpath_blank = ""
     evaluator = Evaluator(inputpath_blank)
@@ -38,8 +33,8 @@ def run(input_path, output_path, selections_file, phenix_path, tmalign_path):
 
 
 def run_steps(params):
-    emdb_id, input_path, output_path, selections_file, phenix_path, tmalign_path = params
-    paths = make_paths(input_path, emdb_id, selections_file, phenix_path, tmalign_path)
+    emdb_id, input_path, output_path, selections_file, tmalign_path = params
+    paths = make_paths(input_path, emdb_id, selections_file, tmalign_path)
 
     for step in PIPELINE:
         paths['output'] = output_path + emdb_id + '/' + step.__name__.split('.')[0] + '/'
@@ -51,7 +46,6 @@ def run_steps(params):
             exc_info = sys.exc_info()
             traceback.print_exception(*exc_info)
 
-    # NOTE: This should eventually be aligned_prediction (whole)
     with open(paths['aligned_prediction']) as f:
         firstChar = f.read(1)
         if not firstChar:
@@ -60,7 +54,7 @@ def run_steps(params):
     return emdb_id, paths['aligned_prediction'], paths['partial_ground_truth'], 0
 
 
-def make_paths(input_path, emdb_id, selections_file, phenix_path, tmalign_path):
+def make_paths(input_path, emdb_id, selections_file, tmalign_path):
     prediction_file = get_file(input_path + emdb_id, ['pdb', 'ent'])
     gt_file = get_file(input_path + emdb_id, ['pdb', 'ent'], ['native'])
     paths = {
@@ -70,8 +64,6 @@ def make_paths(input_path, emdb_id, selections_file, phenix_path, tmalign_path):
 
     if selections_file is not None:
         paths['selections_file'] = selections_file
-    if phenix_path is not None:
-        paths['phenix_chain_comparison_path'] = phenix_path
     if tmalign_path is not None:
         paths['tmalign_path'] = tmalign_path
 

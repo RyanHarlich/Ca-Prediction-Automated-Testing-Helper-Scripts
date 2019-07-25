@@ -1,10 +1,8 @@
 import partial_protein.partial_protein as partial
-import score.score_phenix as score
 import os
 import sys
 from multiprocessing import cpu_count, Pool
 import traceback
-#from .evaluate import build_excel
 from .evaluate import Evaluator
 
 __author__ = 'Michael Ryan Harlich'

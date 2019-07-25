@@ -2,6 +2,7 @@ import os
 import json
 import shutil
 import time
+import traceback
 
 __author__ = 'Michael Ryan Harlich'
 
@@ -20,22 +21,10 @@ def execute(paths):
 
 def save_partial_protein(start_residue, end_residue, paths):
     if start_residue is None and end_residue is None:
-        shutil.copyfile(paths['prediction'], paths['partial_prediction'])
         shutil.copyfile(paths['ground_truth'], paths['partial_ground_truth'])
         return
     else:
-        p_file = open(paths['prediction'], 'r')
         gt_file = open(paths['ground_truth'], 'r')    
-        #if 'phenix_chain_comparison_path' not in paths:
-        #    p_partial_file = open(paths['partial_prediction'], 'w')
-        #    save_partial_file(start_residue, end_residue, p_file, p_partial_file)
-        #    p_partial_file.close()   
-        #else:
-        #    shutil.copyfile(paths['prediction'], paths['partial_prediction'])
-        
-        #p_partial_file = open(paths['partial_prediction'], 'w')
-        #save_partial_file(start_residue, end_residue, p_file, p_partial_file)
-        #p_partial_file.close()  
         
         gt_partial_file = open(paths['partial_ground_truth'], 'w')
         save_partial_file(start_residue, end_residue, gt_file, gt_partial_file)
@@ -43,8 +32,7 @@ def save_partial_protein(start_residue, end_residue, paths):
         
         p_file.close()
         gt_file.close()
-        
-        
+              
         return
 
 def save_partial_file(start_residue, end_residue, src_file, des_file):
@@ -88,5 +76,6 @@ def align(paths):
         ap_file.close()
         tm_sup.close()
     except Exception:
-        print('Error aligning')
+        exc_info = sys.exc_info()
+        traceback.print_exception(*exc_info)
         pass

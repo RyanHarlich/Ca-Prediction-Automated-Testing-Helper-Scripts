@@ -39,6 +39,7 @@ def run(input_path, output_path, option):
 
     best_rmsd = this.calc_best_rmsd(params_list, option)
     this.make_json_file(params_list, best_rmsd)
+    this.make_avg_file(best_rmsd, output_path)
 
 
 
@@ -110,3 +111,23 @@ def make_json_file(params_list, best_rmsd):
     best_json_comments.write('}')        
     best_json.close()
     best_json_comments.close()
+
+
+def make_avg_file(best_rmsd, output_path):
+
+    counter = 0
+    rmsd = 0
+    matching_ca_perc = 0
+    for key, item in best_rmsd.items():
+        rmsd += float(item[0])
+        matching_ca_perc += float(item[1])
+        counter += 1
+
+    avg_rmsd = rmsd / counter
+    avg_matching_ca_perc = matching_ca_perc / counter
+
+    with open(output_path + 'averages', 'w') as avg_file:
+        avg_file.write('Avg. RMSD: ' + str(avg_rmsd) + '\n')
+        avg_file.write('Avg. matching Ca %: ' + str(avg_matching_ca_perc))
+
+

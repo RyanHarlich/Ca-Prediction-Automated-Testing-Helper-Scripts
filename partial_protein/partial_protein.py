@@ -32,9 +32,10 @@ def save_partial_protein(start_residue, end_residue, paths):
         #    p_partial_file.close()   
         #else:
         #    shutil.copyfile(paths['prediction'], paths['partial_prediction'])
-        p_partial_file = open(paths['partial_prediction'], 'w')
-        save_partial_file(start_residue, end_residue, p_file, p_partial_file)
-        p_partial_file.close()  
+        
+        #p_partial_file = open(paths['partial_prediction'], 'w')
+        #save_partial_file(start_residue, end_residue, p_file, p_partial_file)
+        #p_partial_file.close()  
         
         gt_partial_file = open(paths['partial_ground_truth'], 'w')
         save_partial_file(start_residue, end_residue, gt_file, gt_partial_file)

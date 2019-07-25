@@ -8,8 +8,7 @@ from .evaluate import Evaluator
 __author__ = 'Michael Ryan Harlich'
 
 PIPELINE = [
-    partial,
-    score
+    partial
 ]
 
 def run(input_path, output_path, selections_file, tmalign_path):
@@ -25,7 +24,7 @@ def run(input_path, output_path, selections_file, tmalign_path):
     for emdb_id, predicted_file, gt_file, execution_time in results:
         evaluator.evaluate(emdb_id, predicted_file, gt_file, execution_time)
 
-    evaluator.create_report(output_path, 0)
+    evaluator.create_report(output_path, selections_file)
 
 
 

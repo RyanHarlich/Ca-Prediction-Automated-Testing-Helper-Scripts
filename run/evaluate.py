@@ -1,6 +1,7 @@
 import math
 import xlwt
 from datetime import timedelta
+import json
 
 
 class Evaluator:
@@ -136,7 +137,7 @@ class Evaluator:
                                                         execution_time,
                                                         fp_per))
 
-    def create_report(self, output_path, execution_time):
+    def create_report(self, output_path, selections_file):
         """Creates excel document containing evaluation reports"""
         # Don't create report if there are no evaluation results
         if not self.evaluation_results:
@@ -148,37 +149,45 @@ class Evaluator:
         sh = book.add_sheet('results')
 
         sh.write(0, 0, 'EMDB ID')
-        sh.write(0, 1, '# Modeled Ca Atoms')
-        sh.write(0, 2, '# Native Ca Atoms')
-        sh.write(0, 3, '# Matching Ca Atoms')
-        sh.write(0, 4, 'Matching Percentage')
-        sh.write(0, 5, 'RMSD')
-        sh.write(0, 6, 'Incorrect')
-        sh.write(0, 7, 'FP')
-        sh.write(0, 8, 'Execution Time')
+        sh.write(0, 1, 'Fragment')
+        sh.write(0, 2, '# Modeled Ca Atoms')
+        sh.write(0, 3, '# Native Ca Atoms')
+        sh.write(0, 4, '# Matching Ca Atoms')
+        sh.write(0, 5, 'Matching Percentage')
+        sh.write(0, 6, 'RMSD')
+        sh.write(0, 7, 'Incorrect')
+        sh.write(0, 8, 'FP')
+
+        if selections_file is not None:
+            with open(selections_file) as f:
+                selections = json.load(f)
 
         for i in range(len(self.evaluation_results)):
+            emdb_id = self.evaluation_results[i].name
+            if selections_file is not None and emdb_id in selections:
+                start, end = selections[emdb_id]
+                fragment = str(start) + '-' + str(end)
+            else:
+                fragment = 'All'
+
             sh.write(1 + i, 0, self.evaluation_results[i].name)
-            sh.write(1 + i, 1, self.evaluation_results[i].num_modeled_ca)
-            sh.write(1 + i, 2, self.evaluation_results[i].num_native_ca)
-            sh.write(1 + i, 3, self.evaluation_results[i].num_matching_ca)
-            sh.write(1 + i, 4, self.evaluation_results[i].matching_ca_per)
-            sh.write(1 + i, 5, self.evaluation_results[i].rmsd)
-            sh.write(1 + i, 6, self.evaluation_results[i].num_incorrect)
-            sh.write(1 + i, 7, self.evaluation_results[i].fp_per)
-            sh.write(1 + i, 8, str(timedelta(seconds=int(self.evaluation_results[i].execution_time))))
+            sh.write(1 + i, 1, fragment)
+            sh.write(1 + i, 2, self.evaluation_results[i].num_modeled_ca)
+            sh.write(1 + i, 3, self.evaluation_results[i].num_native_ca)
+            sh.write(1 + i, 4, self.evaluation_results[i].num_matching_ca)
+            sh.write(1 + i, 5, self.evaluation_results[i].matching_ca_per)
+            sh.write(1 + i, 6, self.evaluation_results[i].rmsd)
+            sh.write(1 + i, 7, self.evaluation_results[i].num_incorrect)
+            sh.write(1 + i, 8, self.evaluation_results[i].fp_per)
 
         rmsd_avg = sum(r.rmsd for r in self.evaluation_results) / len(self.evaluation_results)
         matching_ca_per_avg = sum(r.matching_ca_per for r in self.evaluation_results) / len(self.evaluation_results)
         execution_time_avg = sum(r.execution_time for r in self.evaluation_results) / len(self.evaluation_results)
         fp_avg = sum(r.fp_per for r in self.evaluation_results) / len(self.evaluation_results)
         sh.write(len(self.evaluation_results) + 1, 0, 'Avg.')
-        sh.write(len(self.evaluation_results) + 1, 4, matching_ca_per_avg)
-        sh.write(len(self.evaluation_results) + 1, 5, rmsd_avg)
-        sh.write(len(self.evaluation_results) + 1, 7, fp_avg)
-        sh.write(len(self.evaluation_results) + 1, 8, str(timedelta(seconds=int(execution_time_avg))))
-        sh.write(len(self.evaluation_results) + 2, 0, 'Total')
-        sh.write(len(self.evaluation_results) + 2, 8, str(timedelta(seconds=int(execution_time))))
+        sh.write(len(self.evaluation_results) + 1, 5, matching_ca_per_avg)
+        sh.write(len(self.evaluation_results) + 1, 6, rmsd_avg)
+        sh.write(len(self.evaluation_results) + 1, 8, fp_avg)
 
         book.save(output_path + 'results.xls')
 

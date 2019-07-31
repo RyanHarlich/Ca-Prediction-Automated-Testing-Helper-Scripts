@@ -18,7 +18,7 @@ if __name__ == '__main__':
 def run(output_path, emdb_id, pdb_id, chain):
     cwd = os.getcwd().replace(os.sep,'/') + '/'
     chimera_script = open(cwd + 'chimera_script.cmd', 'w')
-    output_path += emdb_id
+    output_path += emdb_id + chain
     os.makedirs(output_path, exist_ok=True)
 
     if chain is None:

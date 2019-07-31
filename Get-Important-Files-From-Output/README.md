@@ -1,0 +1,1 @@
+Current working directory should be in the output folder with all the EMD-ID directories.

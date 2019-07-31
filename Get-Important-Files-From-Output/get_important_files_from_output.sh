@@ -1,0 +1,1 @@
+for d in *; do mkdir -p ../newfolder/$d/postprocessing; cp $d/postprocessing/traces*.pdb ../newfolder/$d/postprocessing/; done

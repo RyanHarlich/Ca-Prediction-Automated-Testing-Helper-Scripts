@@ -27,26 +27,30 @@ if __name__ == '__main__':
 
 def run(input_path, output_path, option):
 
-    params_list = [(xls_file, input_path + xls_file, output_path) 
+    params_list = [{'xls_file': xls_file, 'path_to_xls_file': input_path + xls_file, 'output_path': output_path}
                    for xls_file in filter(lambda d: os.path.isfile(input_path + d) 
                                           and (input_path + d).split('.')[-1] in ['xls'], 
                                           os.listdir(input_path))]
 
-    params_list = [param + (json_file, input_path + json_file) 
+    params_list = [merge(param, json_file, input_path)
                    for param in params_list for json_file in filter(lambda d: os.path.isfile(input_path + d) 
                                           and (input_path + d).split('.')[-1] in ['json'], 
-                                          os.listdir(input_path)) if json_file.split('.')[0] == param[0].split('.')[0]]
+                                          os.listdir(input_path)) if json_file.split('.')[0] == param['xls_file'].split('.')[0]]
+
 
     best_rmsd = this.calc_best_rmsd(params_list, option)
     this.make_json_file(params_list, best_rmsd)
     this.make_avg_file(best_rmsd, output_path)
 
+def merge(param, json_file, input_path):
+    param.update({'json_file': json_file, 'path_to_json_file': input_path + json_file})
+    return param
 
 
 def calc_best_rmsd(params_list, option):
     best_rmsd = dict()
     for i in range(len(params_list)):
-        book = xlrd.open_workbook(params_list[i][1])
+        book = xlrd.open_workbook(params_list[i]['path_to_xls_file'])
         first_sheet = book.sheet_by_index(0)
 
         for j in range(first_sheet.nrows):
@@ -57,14 +61,14 @@ def calc_best_rmsd(params_list, option):
             matching_percentage = first_sheet.cell(j,4).value
 
             if emdb_id not in best_rmsd:
-                best_rmsd[emdb_id] = (rmsd, matching_percentage, params_list[i][1].split('/')[-1])
+                best_rmsd[emdb_id] = {'rmsd': rmsd, 'matching_percentage': matching_percentage, 'comment': params_list[i]['path_to_xls_file'].split('/')[-1]}
             else:
                 if option == 1:
-                    if rmsd < best_rmsd[emdb_id][0] and matching_percentage > (best_rmsd[emdb_id][1] - 0.20):
-                        best_rmsd[emdb_id] = (rmsd, matching_percentage, params_list[i][1].split('/')[-1])
+                    if rmsd < best_rmsd[emdb_id]['rmsd'] and matching_percentage > (best_rmsd[emdb_id]['matching_percentage'] - 0.20):
+                        best_rmsd[emdb_id] = {'rmsd': rmsd, 'matching_percentage': matching_percentage, 'comment': params_list[i]['path_to_xls_file'].split('/')[-1]}
                 elif option == 2:
-                    if (rmsd - 1.0) < best_rmsd[emdb_id][0] and matching_percentage > (best_rmsd[emdb_id][1]):
-                        best_rmsd[emdb_id] = (rmsd, matching_percentage, params_list[i][1].split('/')[-1])
+                    if (rmsd - 1.0) < best_rmsd[emdb_id]['rmsd'] and matching_percentage > (best_rmsd[emdb_id]['matching_percentage']):
+                        best_rmsd[emdb_id] = {'rmsd': rmsd, 'matching_percentage': matching_percentage, 'comment': params_list[i]['path_to_xls_file'].split('/')[-1]}
                 else:
                     print('Invalid option selected. Must be 1 or 2.')
     return best_rmsd
@@ -73,8 +77,8 @@ def calc_best_rmsd(params_list, option):
 
 def get_hyperparameter(params_list, key, value):
     for i in range(len(params_list)):
-        if value[2] == params_list[i][0]:
-            with open(params_list[i][4]) as f:
+        if value['comment'] == params_list[i]['xls_file']:
+            with open(params_list[i]['path_to_json_file']) as f:
                 json_file = json.load(f)
             hyper_parameter = json_file[key]
             return str(hyper_parameter)
@@ -83,8 +87,8 @@ def get_hyperparameter(params_list, key, value):
 
 def make_json_file(params_list, best_rmsd):
 
-    best_json = open(params_list[0][2] + 'best.json', 'w')
-    best_json_comments = open(params_list[0][2] + 'best_comments.json', 'w')
+    best_json = open(params_list[0]['output_path'] + 'best.json', 'w')
+    best_json_comments = open(params_list[0]['output_path'] + 'best_comments.json', 'w')
 
     best_json.write('{\n')
     best_json_comments.write('{\n')
@@ -102,10 +106,10 @@ def make_json_file(params_list, best_rmsd):
 
         if i < len(best_rmsd) - 1:
             best_json.write(',\n')
-            best_json_comments.write(',' + '  # ' + value[2] + '\n')
+            best_json_comments.write(',' + '  # ' + value['comment'] + '\n')
         else:
             best_json.write('\n')
-            best_json_comments.write('   # ' + value[2] + '\n')
+            best_json_comments.write('   # ' + value['comment'] + '\n')
             
     best_json.write('}')
     best_json_comments.write('}')        
@@ -119,8 +123,8 @@ def make_avg_file(best_rmsd, output_path):
     rmsd = 0
     matching_ca_perc = 0
     for key, item in best_rmsd.items():
-        rmsd += float(item[0])
-        matching_ca_perc += float(item[1])
+        rmsd += float(item['rmsd'])
+        matching_ca_perc += float(item['matching_percentage'])
         counter += 1
 
     avg_rmsd = rmsd / counter

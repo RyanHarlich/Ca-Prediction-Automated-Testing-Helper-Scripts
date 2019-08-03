@@ -1,0 +1,1 @@
+for d in *; do mkdir -p ../newfolder/$d; cp ../30_proteins_experimental_maps/$d/*.ent ../newfolder/$d; cp ./$d/preprocessing/*.mrc ../newfolder/$d; done

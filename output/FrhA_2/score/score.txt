@@ -1,0 +1,2 @@
+RMSD: 0.00
+Matching Ca %: 0.0

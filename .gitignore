@@ -121,6 +121,10 @@ dmypy.json
 .pyre/
 
 # Visual Studio
+<<<<<<< HEAD
 *.pyproj
 .vs/
 *.sln
+=======
+*.pyproj
+>>>>>>> Segments/master

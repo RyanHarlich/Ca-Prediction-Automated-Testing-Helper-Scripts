@@ -5,6 +5,9 @@ import Best_RMSD_Finder as this
 import json
 import xlwt
 from datetime import timedelta
+from distutils.dir_util import copy_tree
+import traceback
+import sys
 
 __author__ = 'Michael Ryan Harlich'
 
@@ -105,6 +108,7 @@ if __name__ == '__main__':
     parser.add_argument('input', type=str, help='Folder of .xls result files from Ca protein prediction project output and json hyperparameter files that produced those results')
     parser.add_argument('output', type=str, help='Folder where json files are produced with hyperparameters with best RMSD')
     parser.add_argument('-o',  '--option', metavar='option', type=int, default=1, help='Option 1 is best RMSD focus, option 2 is best matching Ca percentage focus')
+    parser.add_argument('-s',  '--sort', metavar='sort', action='store_const', const=True, default=False, help='Sorts output folders with emdb_id directories containing predicted structures to a best output folder based on the option selected')
 
     args = parser.parse_args()
 
@@ -114,7 +118,7 @@ if __name__ == '__main__':
     args.input = os.getcwd().replace(os.sep, '/') + '/' + args.input
     args.output = os.getcwd().replace(os.sep, '/') + '/' + args.output
 
-    this.run(args.input, args.output, args.option)
+    this.run(args.input, args.output, args.option, args.sort)
 
 
 
@@ -152,7 +156,7 @@ def make_blank_json_file(path, path_to_xls_file):
     best_json.close()
 
 
-def run(input_path, output_path, option):
+def run(input_path, output_path, option, sort):
 
     params_list = [{'xls_file': xls_file, 'path_to_xls_file': input_path + xls_file, 'output_path': output_path}
                    for xls_file in filter(lambda d: os.path.isfile(input_path + d) 
@@ -184,6 +188,22 @@ def run(input_path, output_path, option):
     evaluator = Evaluator()
     evaluator.load(best_rmsd)
     evaluator.create_report(params_list[0]['output_path'] + 'best_results.xls', 0)
+    if sort:
+        this.sort_results(best_rmsd, output_path, input_path)
+
+def sort_results(best_rmsd, output_path, input_path):
+
+    os.makedirs(output_path + 'best_results', exist_ok=True)
+
+    
+    for key, item in best_rmsd.items():
+        try:
+            source = input_path + item['comment'].split('.')[0] + '/' + key
+            destination = output_path + 'best_results' + '/' + key
+            copy_tree(source, destination)
+        except:
+            exc_info = sys.exc_info()
+            traceback.print_exception(*exc_info)
 
 def merge(param, json_file, input_path):
     param.update({'json_file': json_file, 'path_to_json_file': input_path + json_file})

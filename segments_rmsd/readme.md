@@ -1,10 +1,10 @@
 pip install tmscoring
 * have anaconda
 
-pip install numpy
-pip install iminuit
-pip install Bio
-pip install biopython # this might not be needed (should not be needed)
+pip install numpy  
+pip install iminuit  
+pip install Bio  
+pip install biopython # this might not be needed (should not be needed)  
 * Change bio folder in Lib to "Bio" instead of "bio" in virtual environment
 
 pip install xlwt

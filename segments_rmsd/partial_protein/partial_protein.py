@@ -30,7 +30,6 @@ def save_partial_protein(start_residue, end_residue, paths):
         save_partial_file(start_residue, end_residue, gt_file, gt_partial_file)
         gt_partial_file.close()       
         
-        p_file.close()
         gt_file.close()
               
         return

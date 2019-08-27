@@ -8,6 +8,7 @@ from datetime import timedelta
 from distutils.dir_util import copy_tree
 import traceback
 import sys
+import ast
 
 __author__ = 'Michael Ryan Harlich'
 
@@ -86,7 +87,8 @@ class Evaluator:
 
         rmsd_avg = sum(r.rmsd for r in self.evaluation_results) / len(self.evaluation_results)
         matching_ca_per_avg = sum(r.matching_ca_per for r in self.evaluation_results) / len(self.evaluation_results)
-        execution_time_avg = sum(int(int(r.execution_time.split(':')[2]) + int(r.execution_time.split(':')[1])*60 + int(r.execution_time.split(':')[0])*60*60) for r in self.evaluation_results) / len(self.evaluation_results)
+        #execution_time_avg = sum(int(int(r.execution_time.split(':')[2]) + int(r.execution_time.split(':')[1])*60 + int(r.execution_time.split(':')[0])*60*60) for r in self.evaluation_results) / len(self.evaluation_results)
+        execution_time_avg = 0
         execution_time_avg = str(timedelta(seconds=execution_time_avg))
         fp_avg = sum(r.fp_per for r in self.evaluation_results) / len(self.evaluation_results)
         sh.write(len(self.evaluation_results) + 1, 0, 'Avg.')
@@ -222,6 +224,20 @@ def calc_best_rmsd(params_list, option):
                 continue
             rmsd = first_sheet.cell(j,5).value
             matching_percentage = first_sheet.cell(j,4).value
+
+            try:
+                if int(get_hyperparameter(params_list, emdb_id, {'comment': params_list[i]['path_to_xls_file'].split('/')[-1]})) == -1:
+                    print("Skipped: " + emdb_id)
+                    continue
+            except:
+                pass
+
+            try:
+                if -1 in ast.literal_eval(get_hyperparameter(params_list, emdb_id, {'comment': params_list[i]['path_to_xls_file'].split('/')[-1]})):
+                    print("Skipped: " + emdb_id)
+                    continue
+            except:
+                pass
 
             if emdb_id not in best_rmsd:
                 best_rmsd[emdb_id] = {'rmsd': rmsd, 'matching_percentage': matching_percentage, 'comment': params_list[i]['path_to_xls_file'].split('/')[-1], 
